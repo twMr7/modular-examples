@@ -13,6 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ConfigurationFile">
+      <UniqueIdentifier>{3f64ea84-082e-4daf-9484-49a8fb294145}</UniqueIdentifier>
+      <Extensions>ini</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppLoadPlugin.cpp">
@@ -23,5 +27,13 @@
     <ClInclude Include="..\include\AbstractPlugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AppLoadPlugin.ini">
+      <Filter>ConfigurationFile</Filter>
+    </None>
+    <None Include="AlternativeConfig.ini">
+      <Filter>ConfigurationFile</Filter>
+    </None>
   </ItemGroup>
 </Project>

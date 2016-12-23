@@ -29,11 +29,8 @@ class AppLoadPlugin : public Application
 {
 private:
 	bool _helpRequested;
-	std::string _appConfigFile { "" };
-	std::string _pluginFile { "PluginC.dll" };
-	std::string _pluginClass { "PluginC" };
 	Poco::ClassLoader<AbstractPlugin> _pluginLoader;
-	AbstractPlugin* pPluginInstance;
+	AbstractPlugin* _pPluginInstance{ nullptr };
 
 public:
 	AppLoadPlugin() : _helpRequested(false)
@@ -43,86 +40,59 @@ public:
 protected:
 	void initialize(Application& self)
 	{
-		// First, change to desired logging level,
-		// so that all the initialization can be logged
+		poco_information(logger(), std::string(name()) + " init");
+
+		// load specific configuration files, if present
 		try
 		{
-			int level = config().getInt("logging.level");
-			logger().root().setLevel(level);
+			std::string filename = config().getString("application.configFile");
+			if (Poco::Path(filename).isFile() && Poco::File(filename).exists())
+			{
+				poco_debug(logger(), "Load configuration file " + filename);
+				loadConfiguration(filename);
+			}
+			else
+			{
+				poco_debug(logger(), "invalid configuration file '" + filename + "', try loading default");
+				loadConfiguration();
+			}
 		}
 		catch (...)
 		{
-			poco_information(logger(), "Use default logging level");
-		}
-		poco_debug(logger(), std::string(name()) + " init");
-
-		// load default configuration files, if present
-		if (_appConfigFile.empty())
+			poco_debug(logger(), "try loading default configuration file");
 			loadConfiguration();
-		else
-			loadConfiguration(_appConfigFile);
+		}
 
+		// ancestor initialization
+		// registered subsystems, e.g. logger, are initialized here
 		Application::initialize(self);
 
-		try
-		{
-			std::string pluginClass  = config().getString("module.plugin");
-			if (0 == Poco::icompare(std::string{ "A" }, pluginClass))
-			{
-				_pluginFile = "PluginAB.dll";
-				_pluginClass = "PluginA";
-			}
-			else if (0 == Poco::icompare(std::string{ "B" }, pluginClass))
-			{
-
-				_pluginFile = "PluginAB.dll";
-				_pluginClass = "PluginB";
-			}
-			// else use default
-		}
-		catch (...)
-		{
-			poco_information(logger(), "Load default plugin C");
-		}
-		_pluginLoader.loadLibrary(_pluginFile);
-		Poco::ClassLoader<AbstractPlugin>::Iterator it(_pluginLoader.begin());
-		Poco::ClassLoader<AbstractPlugin>::Iterator end(_pluginLoader.end());
-		for (; it != end; ++it)
-		{
-			std::cout << "lib path: " << it->first << std::endl;
-			Poco::Manifest<AbstractPlugin>::Iterator itMan(it->second->begin());
-			Poco::Manifest<AbstractPlugin>::Iterator endMan(it->second->end());
-			for (; itMan != endMan; ++itMan)
-				std::cout << "Found plugin class in lib: " << itMan->name() << std::endl;
-		}
-
-		// load the class
-		pPluginInstance = _pluginLoader.create(_pluginClass);
-		_pluginLoader.classFor(_pluginClass).autoDelete(pPluginInstance);
+		loadPlugin();
 	}
 
 	void uninitialize()
 	{
-		poco_debug(logger(), std::string(name()) + " uninit");
-		// our own uninitialization code here
-		_pluginLoader.unloadLibrary(_pluginFile);
+		poco_information(logger(), std::string(name()) + " uninit");
 
+		// our own uninitialization code here
+		unloadPlugin();
+
+		// ancestor uninitialization
 		Application::uninitialize();
 	}
 
 	void reinitialize(Application& self)
 	{
-		poco_debug(logger(), std::string(name()) + " reinit");
+		poco_information(logger(), std::string(name()) + " reinit");
 
 		// our own uninitialization code here
-		_pluginLoader.unloadLibrary(_pluginFile);
+		unloadPlugin();
 
+		// ancestor uninitialization
 		Application::reinitialize(self);
 
 		// our own reinitialization code here
-		_pluginLoader.loadLibrary(_pluginFile);
-		pPluginInstance = _pluginLoader.create(_pluginClass);
-		_pluginLoader.classFor(_pluginClass).autoDelete(pPluginInstance);
+		loadPlugin();
 	}
 
 	void defineOptions(OptionSet& options)
@@ -133,100 +103,69 @@ protected:
 			Option("help", "h", "display help information on command line arguments")
 			.required(false)
 			.repeatable(false)
-			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleHelp)));
-
-		options.addOption(
-			Option("config", "c", "load configuration data from a file")
-			.required(false)
-			.repeatable(true)
-			.argument("file")
-			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleConfig)));
+			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentHelp)));
 
 		options.addOption(
 			Option("define", "d", "define a configuration property")
 			.required(false)
 			.repeatable(true)
 			.argument("name=value")
-			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleDefine)));
+			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentDefine)));
 
+		// This option assign argument directly to configuration "application.configFile".
+		// If argument validation is needed, we need to implement a FileValidator class derived from Validator
 		options.addOption(
-			Option("bind", "b", "bind option value to test.property")
+			Option("file", "f", "assign a specific configuration file name to load")
 			.required(false)
 			.repeatable(false)
-			.argument("value")
-			.binding("test.property"));
+			.argument("filename")
+			.binding("application.configFile"));
 
+		// This option also change the configuration "application.configFile" in callback handler.
+		// The difference is that callback handler can do additional check on the arguments.
 		options.addOption(
-			Option("loglevel", "l", "[1-8] or level name to assign logging verbose level")
+			Option("config", "c", "load configuration data from a file")
 			.required(false)
-			.repeatable(false)
-			.argument("level")
-			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleLogLevel)));
+			.repeatable(true)
+			.argument("filename")
+			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentConfig)));
 
 		options.addOption(
-			Option("module", "m", "{'A', 'B', 'C'} to load different plugin class")
+			Option("plugin", "p", "load different plugin class, available plugins: { 'PluginA', 'PluginB', 'PluginC' }")
 			.required(true)
 			.repeatable(false)
-			.argument("name")
-			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleModuleName)));
-
+			.argument("class")
+			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentPluginClass)));
 	}
 
-	void handleHelp(const std::string& name, const std::string& value)
+	void handleArgumentHelp(const std::string& name, const std::string& value)
 	{
 		_helpRequested = true;
 		displayHelp();
 		stopOptionsProcessing();
 	}
 
-	void handleDefine(const std::string& name, const std::string& value)
+	void handleArgumentDefine(const std::string& name, const std::string& value)
 	{
-		poco_debug(logger(), "handleDefine: " + name + "=" + value);
+		poco_debug(logger(), "handleArgumentDefine: " + name + "=" + value);
 		defineProperty(value);
 	}
 
-	void handleConfig(const std::string& name, const std::string& value)
+	void handleArgumentConfig(const std::string& name, const std::string& value)
 	{
-		poco_debug(logger(), "handleConfig: " + value);
-		if (Poco::Path(value).isFile())
-		{
-			poco_trace(logger(), value + " is file.");
-			if (Poco::File(value).exists())
-				_appConfigFile = value;
-			else
-				poco_trace(logger(), value + " is not exist.");
-		}
+		poco_debug(logger(), "handleArgumentConfig: " + value);
+		// We can do additional check on the validity of argument here.
+		// However, since the value of "application.configFile" may be set by various ways,
+		// it is more proper to check the existence of file right before the application needs to load it in. 
+		config().setString("application.configFile", value);
 	}
 
-	void handleLogLevel(const std::string& name, const std::string& value)
+	void handleArgumentPluginClass(const std::string& name, const std::string& value)
 	{
-		poco_debug(logger(), "handleLogLevel: " + value);
-		try
-		{
-			// fatal       = 1 (highest priority)
-			// critical    = 2
-			// error       = 3
-			// warning     = 4
-			// notice      = 5
-			// information = 6
-			// debug       = 7
-			// trace       = 8 (lowest priority)
-			int level = logger().parseLevel(value);
-			config().setInt("logging.level", level);
-		}
-		catch (Poco::InvalidArgumentException(exp))
-		{
-			poco_error(logger(), "argument " + value + " " + exp.message());
-		}
-	}
-
-	void handleModuleName(const std::string& name, const std::string& value)
-	{
-		poco_debug(logger(), "handleModuleName: " + value);
-		if (0 == Poco::icompare(std::string{ "A" }, value) ||
-			0 == Poco::icompare(std::string{ "B" }, value) ||
-			0 == Poco::icompare(std::string{ "C" }, value))
-			config().setString("module.plugin", value);
+		poco_debug(logger(), "handleArgumentPluginClass: " + value);
+		// validate the argument for the availability of plugin classes
+		if (value == "PluginA" || value == "PluginB" || value == "PluginC")
+			config().setString("plugin.class", value);
 	}
 
 	void displayHelp()
@@ -234,7 +173,7 @@ protected:
 		HelpFormatter helpFormatter(options());
 		helpFormatter.setCommand(commandName());
 		helpFormatter.setUsage("OPTIONS");
-		helpFormatter.setHeader("A sample application that demonstrates features of Application, commandline options, configuration and loading plugins.");
+		helpFormatter.setHeader("A sample application that demonstrates features of Application, commandline options, configuration, logging, and loading plugins.");
 		helpFormatter.format(std::cout);
 	}
 
@@ -252,9 +191,63 @@ protected:
 		config().setString(name, value);
 	}
 
+	void loadPlugin()
+	{
+		if (_pPluginInstance != nullptr)
+			return;
+
+		// default to load PluginC class from PluginC.dll
+		std::string pluginFile{ "PluginC.dll" };
+		std::string pluginClass = config().getString("plugin.class", "PluginC");
+		if (pluginClass == "PluginA" || pluginClass == "PluginB")
+			pluginFile = "PluginAB.dll";
+
+		// check the existence of the .dll file before loading it
+		if (Poco::File(pluginFile).exists())
+		{
+			_pluginLoader.loadLibrary(pluginFile);
+
+			// display the information about plugin class if needed
+			Poco::ClassLoader<AbstractPlugin>::Iterator it(_pluginLoader.begin());
+			Poco::ClassLoader<AbstractPlugin>::Iterator end(_pluginLoader.end());
+			poco_trace(logger(), "Plugin loader info: " + it->first);
+			for (; it != end; ++it)
+			{
+				poco_trace(logger(), "\tplugin path: " + it->first);
+				Poco::Manifest<AbstractPlugin>::Iterator itMan(it->second->begin());
+				Poco::Manifest<AbstractPlugin>::Iterator endMan(it->second->end());
+				for (; itMan != endMan; ++itMan)
+					poco_trace(logger(), "found class in plugin lib: " + std::string(itMan->name()));
+			}
+
+			// load the class
+			_pPluginInstance = _pluginLoader.create(pluginClass);
+			_pluginLoader.classFor(pluginClass).autoDelete(_pPluginInstance);
+		}
+	}
+
+	void unloadPlugin()
+	{
+		if (_pPluginInstance == nullptr)
+			return;
+
+		// default to unload PluginC.dll
+		std::string pluginFile{ "PluginC.dll" };
+		std::string pluginClass = config().getString("plugin.class", "PluginC");
+		if (pluginClass == "PluginA" || pluginClass == "PluginB")
+			pluginFile = "PluginAB.dll";
+
+		_pluginLoader.unloadLibrary(pluginFile);
+	}
+
 	int main(const ArgVec& args)
 	{
-		if (!_helpRequested)
+		// Although the logger should log messages only in proper logging level, it is good practice to
+		// check current level setting to avoid the overhead of string construction.
+		// Two way to do the same thing, use one of the following methods wherever appropriate:
+		// (1). check if logger().*LevelName*() then do logger().*LevelName*("message string")
+		// (2). use Poco's predefined macro: poco_LevelName(logger(), "message string")
+		if (!_helpRequested && logger().information())
 		{
 			logger().information("Command line:");
 			std::ostringstream ostr;
@@ -273,7 +266,10 @@ protected:
 		}
 
 		// show loaded plugin
-		std::cout << "Module: " << pPluginInstance->name() << " is used this time." << std::endl;
+		std::cout << "\nwhich plugin: " << _pPluginInstance->name() << " is loaded this time." << std::endl;
+
+		// wait for any key then exit
+		std::system("pause");
 
 		return Application::EXIT_OK;
 	}

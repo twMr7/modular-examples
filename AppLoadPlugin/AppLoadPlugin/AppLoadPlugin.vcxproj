@@ -163,7 +163,20 @@
   <ItemGroup>
     <ClInclude Include="..\include\AbstractPlugin.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="AlternativeConfig.ini" />
+    <None Include="AppLoadPlugin.ini" />
+    <ConfigurationFile Include="$(ProjectDir)\*.ini" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <Target Name="AfterBuild">
+    <Message Text="Copy configuration files to output folder" />
+    <Copy SourceFiles="@(ConfigurationFile)" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Target Name="AfterClean">
+    <Message Text="Delete configuration files from output folder" />
+    <Delete Files="$(OutDir)AppLoadPlugin.ini;$(OutDir)AlternativeConfig.ini" />
+  </Target>
 </Project>
