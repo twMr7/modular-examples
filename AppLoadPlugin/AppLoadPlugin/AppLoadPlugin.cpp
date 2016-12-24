@@ -10,6 +10,8 @@
 #include "Poco/ClassLoader.h"
 #include "Poco/Manifest.h"
 #include "Poco/String.h"
+#include "Poco/ConsoleChannel.h"
+#include "Poco/Exception.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -22,6 +24,7 @@ using Poco::Util::OptionSet;
 using Poco::Util::HelpFormatter;
 using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
+using Poco::ConsoleChannel;
 using Poco::AutoPtr;
 using Poco::Message;
 
@@ -37,10 +40,15 @@ public:
 	{
 	}
 
+	bool helpRequested()
+	{
+		return _helpRequested;
+	}
+
 protected:
 	void initialize(Application& self)
 	{
-		poco_information(logger(), std::string(name()) + " init");
+		poco_information(logger(), config().getString("application.name", name()) + " initialize");
 
 		// load specific configuration files, if present
 		try
@@ -53,8 +61,7 @@ protected:
 			}
 			else
 			{
-				poco_debug(logger(), "invalid configuration file '" + filename + "', try loading default");
-				loadConfiguration();
+				throw Poco::NotFoundException();
 			}
 		}
 		catch (...)
@@ -65,17 +72,30 @@ protected:
 
 		// ancestor initialization
 		// registered subsystems, e.g. logger, are initialized here
-		Application::initialize(self);
+		try
+		{
+			Application::initialize(self);
+		}
+		catch (...)
+		{
+			// If Poco has problem with configuration file, try catch the exception to abort gracefully.
+			std::clog << "Fail to initialize Application, it possibly caused by wrong configuration." << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
 
 		loadPlugin();
 	}
 
 	void uninitialize()
 	{
-		poco_information(logger(), std::string(name()) + " uninit");
+		poco_information(logger(), config().getString("application.name", name()) + " uninitialize");
 
 		// our own uninitialization code here
 		unloadPlugin();
+		// no matter what the current channel is, reset it back to default console channel
+		// to avoid unpredictable result cause by other channel type, AsyncChannel especially.
+		AutoPtr<ConsoleChannel> pCC = new ConsoleChannel;
+		logger().setChannel(pCC);
 
 		// ancestor uninitialization
 		Application::uninitialize();
@@ -83,10 +103,26 @@ protected:
 
 	void reinitialize(Application& self)
 	{
-		poco_information(logger(), std::string(name()) + " reinit");
+		poco_information(logger(), config().getString("application.name", name()) + " reinitialize");
 
 		// our own uninitialization code here
 		unloadPlugin();
+		AutoPtr<ConsoleChannel> pCC = new ConsoleChannel;
+		logger().setChannel(pCC);
+
+		// reload configuration file
+		try
+		{
+			std::string filename = config().getString("application.configFile");
+			if (Poco::Path(filename).isFile() && Poco::File(filename).exists())
+				loadConfiguration(filename);
+			else
+				throw Poco::NotFoundException();
+		}
+		catch (...)
+		{
+			loadConfiguration();
+		}
 
 		// ancestor uninitialization
 		Application::reinitialize(self);
@@ -242,12 +278,15 @@ protected:
 
 	int main(const ArgVec& args)
 	{
+		if (_helpRequested)
+			return Application::EXIT_USAGE;
+
 		// Although the logger should log messages only in proper logging level, it is good practice to
 		// check current level setting to avoid the overhead of string construction.
 		// Two way to do the same thing, use one of the following methods wherever appropriate:
 		// (1). check if logger().*LevelName*() then do logger().*LevelName*("message string")
 		// (2). use Poco's predefined macro: poco_LevelName(logger(), "message string")
-		if (!_helpRequested && logger().information())
+		if (logger().information())
 		{
 			logger().information("Command line:");
 			std::ostringstream ostr;
@@ -304,24 +343,27 @@ protected:
 };
 
 
-POCO_APP_MAIN(AppLoadPlugin)
-/*
-// The macro POCO_APP_MAIN(App) expand to
+// We can also use predefined macro with less control over how Application runs
+//POCO_APP_MAIN(AppLoadPlugin)
+
 int wmain(int argc, wchar_t** argv)
 {
-	Poco::AutoPtr<App> pApp = new App;
+	Poco::AutoPtr<AppLoadPlugin> pApp = new AppLoadPlugin;
 	try
 	{
 	    // init() process command line and set properties
 		pApp->init(argc, argv);
 	}
-	catch (Poco::Exception& exc)
+	catch (Poco::Exception& exp)
 	{
-		pApp->logger().log(exc);
-		return Poco::Util::Application::EXIT_CONFIG;
+		pApp->logger().log(exp);
+		return Application::EXIT_CONFIG;
 	}
+
+	// user requests for help, no need to run the whole procedure
+	if (pApp->helpRequested())
+		return Application::EXIT_USAGE;
 
 	// initialize(), main(), and then uninitialize()
 	return pApp->run();
 }
-*/
