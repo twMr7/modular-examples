@@ -2,7 +2,6 @@
 
 #include "Poco/Task.h"
 #include "Poco/Logger.h"
-#include "Poco/Notification.h"
 
 class DioPollingTask : public Poco::Task
 {
@@ -33,22 +32,3 @@ enum class Din : uint16_t
 	Mask = 0x0FFF
 };
 
-class Sensor1Changed : public Poco::Notification
-{
-public:
-	Sensor1Changed(bool value) : _value(value) {}
-	bool isON() const { return _value; }
-
-private:
-	bool _value;
-};
-
-class Sensor2Changed: public Poco::Notification
-{
-public:
-	Sensor2Changed(bool value) : _value(value) {}
-	bool isON() const { return _value; }
-
-private:
-	bool _value;
-};

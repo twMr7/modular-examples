@@ -1,16 +1,18 @@
 #include "Poco/Util/Application.h"
 #include "Poco/NumberFormatter.h"
+
 #include "DioPollingTask.h"
+#include "MachineEvents.h"
 
 using Poco::Task;
 using Poco::Logger;
 using Poco::NumberFormatter;
 
-DioPollingTask::DioPollingTask():
-	Task("DioPollingTask"),
-	_stateDin(0),
-	_stateDout(0),
-	_logger(Logger::get("Dio"))
+DioPollingTask::DioPollingTask()
+	: Task("DioPollingTask")
+	, _stateDin(0)
+	, _stateDout(0)
+	, _logger(Logger::get("Dio"))
 {
 }
 
@@ -42,12 +44,12 @@ void DioPollingTask::runTask()
 			if (_stateDin == (uint16_t)Din::Sensor1)
 			{
 				poco_trace(_logger, "Sensor1 ON");
-				postNotification(new Sensor1Changed(true));
+				postNotification(new Event_Sensor1Changed(true));
 			}
 			else if (_stateDin == (uint16_t)Din::Sensor2)
 			{
 				poco_trace(_logger, "Sensor2 ON");
-				postNotification(new Sensor2Changed(true));
+				postNotification(new Event_Sensor2Changed(true));
 			}
 			else
 			{

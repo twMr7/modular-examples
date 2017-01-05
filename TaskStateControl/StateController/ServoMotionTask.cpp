@@ -1,7 +1,8 @@
 #include "ServoMotionTask.h"
+#include "MachineEvents.h"
 
-ServoMotionTask::ServoMotionTask() :
-	Task("ServoMotionTask")
+ServoMotionTask::ServoMotionTask()
+	: Task("ServoMotionTask")
 {
 }
 
@@ -16,7 +17,7 @@ void ServoMotionTask::runTask()
 	while (!sleep(500))
 	{
 		position += 123;
-		postNotification(new MotorFeedback(position));
+		postNotification(new Event_MotorFeedback(position));
 	}
 }
 

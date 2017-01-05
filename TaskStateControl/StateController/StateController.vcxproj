@@ -159,14 +159,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DioPollingTask.cpp" />
+    <ClCompile Include="MachineState.cpp" />
     <ClCompile Include="ServoMotionTask.cpp" />
     <ClCompile Include="StateController.cpp" />
     <ClCompile Include="wmain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DioPollingTask.h" />
+    <ClInclude Include="MachineEvents.h" />
     <ClInclude Include="ServoMotionTask.h" />
     <ClInclude Include="StateController.h" />
+    <ClInclude Include="MachineState.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="StateController.ini" />

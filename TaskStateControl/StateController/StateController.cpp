@@ -2,83 +2,22 @@
 
 #include "Poco/Util/Option.h"
 #include "Poco/Util/HelpFormatter.h"
-#include "Poco/Process.h"
 #include "Poco/ErrorHandler.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/AsyncChannel.h"
 #include "Poco/ConsoleChannel.h"
-#include "Poco/Task.h"
-#include "Poco/TaskManager.h"
-#include "Poco/NObserver.h"
 
 #include "StateController.h"
-#include "DioPollingTask.h"
-#include "ServoMotionTask.h"
+#include "MachineState.h"
 
 using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
 using Poco::Util::OptionCallback;
 using Poco::Util::HelpFormatter;
-using Poco::Logger;
-using Poco::NamedEvent;
-using Poco::ErrorHandler;
-using Poco::AutoPtr;
-using Poco::Task;
-using Poco::TaskManager;
-using Poco::NObserver;
 
-// NOTE: for a real world application, a context class is required to complete the state pattern
-class StateChangeHandler
-{
-public:
-	StateChangeHandler(Poco::TaskManager& taskmgr) :
-		_logger(Application::instance().logger()),
-		_manager(taskmgr)
-	{
-	}
 
-	void onSensor1Changed(const AutoPtr<Sensor1Changed>& pNotify)
-	{
-		std::string state = (pNotify->isON()) ? "ON" : "OFF";
-		poco_information(_logger, "Sensor #1 is " + state + " -> Kick off motor task");
-		// reacting to this change by kicking off another task
-		_manager.addObserver(
-			NObserver<StateChangeHandler, MotorFeedback>
-			(*this, &StateChangeHandler::onMotorFeedback)
-		);
-		_manager.start(new ServoMotionTask);
-	}
-
-	void onSensor2Changed(const AutoPtr<Sensor2Changed>& pNotify)
-	{
-		std::string state = (pNotify->isON()) ? "ON" : "OFF";
-		poco_information(_logger, "Sensor #2 is " + state + " -> stop motor task");
-		TaskManager::TaskList taskList = _manager.taskList();
-		for (auto& task : taskList)
-		{
-			if (task->name() == "ServoMotionTask")
-			{
-				task->cancel();
-			}
-		}
-		_manager.removeObserver(
-			NObserver<StateChangeHandler, MotorFeedback>
-			(*this, &StateChangeHandler::onMotorFeedback)
-		);
-	}
-
-	void onMotorFeedback(const AutoPtr<MotorFeedback>& pNotify)
-	{
-		poco_information(_logger, "Motor feedback position = " + std::to_string(pNotify->Position()));
-	}
-
-private:
-	Logger& _logger;
-	TaskManager& _manager;
-};
-
-class TaskErrorHandler : public ErrorHandler
+class TaskErrorHandler : public Poco::ErrorHandler
 {
 public:
 	void exception(const Poco::Exception& exp)
@@ -97,8 +36,9 @@ public:
 	}
 };
 
-Poco::NamedEvent StateController::_eventTerminate(Poco::ProcessImpl::terminationEventName(Poco::Process::id()));
+// static members initialize
 Poco::Event StateController::_eventTerminated;
+Poco::NotificationQueue StateController::_eventQueue;
 
 void StateController::handleHelp(const std::string & name, const std::string & value)
 {
@@ -134,6 +74,8 @@ void StateController::initialize(Application & self)
 	loadConfiguration();
 	// all registered subsystems are initialized in ancestor's initialize procedure
 	Application::initialize(self);
+	// catch the termination request
+	SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 }
 
 void StateController::uninitialize()
@@ -142,7 +84,7 @@ void StateController::uninitialize()
 	// to avoid unpredictable result cause by AsyncChannel, change the channel to ConsoleChannel explicitly
 	if (dynamic_cast<Poco::AsyncChannel*>(logger().getChannel()))
 	{
-		AutoPtr<Poco::ConsoleChannel> pCC = new Poco::ConsoleChannel;
+		Poco::AutoPtr<Poco::ConsoleChannel> pCC = new Poco::ConsoleChannel;
 		logger().setChannel("", pCC);
 	}
 
@@ -167,35 +109,20 @@ int StateController::main(const ArgVec & args)
 	{
 		// install the last line error catcher
 		TaskErrorHandler newEH;
-		ErrorHandler* pOldEH = ErrorHandler::set(&newEH);
+		Poco::ErrorHandler* pOldEH = Poco::ErrorHandler::set(&newEH);
 
-		TaskManager taskmgr;
-		StateChangeHandler hStateChange(taskmgr);
-		taskmgr.addObserver(
-			NObserver<StateChangeHandler, Sensor1Changed>
-			(hStateChange, &StateChangeHandler::onSensor1Changed)
-		);
-		taskmgr.addObserver(
-			NObserver<StateChangeHandler, Sensor2Changed>
-			(hStateChange, &StateChangeHandler::onSensor2Changed)
-		);
-		taskmgr.start(new DioPollingTask);
+		Poco::TaskManager taskManager;
+		MachineState machineState(taskManager, _eventQueue);
+		machineState.start();
 
-		waitForTerminationRequest();
+		_eventTerminated.set();
 
-		taskmgr.cancelAll();
-		taskmgr.joinAll();
+		taskManager.cancelAll();
+		taskManager.joinAll();
 
-		ErrorHandler::set(pOldEH);
+		Poco::ErrorHandler::set(pOldEH);
 	}
 	return Application::EXIT_OK;
-}
-
-void StateController::waitForTerminationRequest()
-{
-	SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
-	_eventTerminate.wait();
-	_eventTerminated.set();
 }
 
 bool StateController::helpRequested()
@@ -205,5 +132,5 @@ bool StateController::helpRequested()
 
 void StateController::terminate()
 {
-	_eventTerminate.set();
+	_eventQueue.enqueueUrgentNotification(new Event_TerminateRequest);
 }
