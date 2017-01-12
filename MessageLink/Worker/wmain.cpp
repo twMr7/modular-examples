@@ -1,13 +1,13 @@
 #include <iostream>
 #include "Poco/Logger.h"
-#include "StateController.h"
+#include "AppWorker.h"
 
 using Poco::Util::Application;
 using Poco::Logger;
 
 int wmain(int argc, wchar_t** argv)
 {
-	StateController appMain;
+	AppWorker appMain;
 	try
 	{
 		// init() process command line and set properties
