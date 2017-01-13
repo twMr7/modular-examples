@@ -57,6 +57,12 @@
     <ClInclude Include="MessageLink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\cppzmq\zmq.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cppzmq\zmq_addon.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Worker.ini">

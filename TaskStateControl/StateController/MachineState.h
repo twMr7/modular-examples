@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include "Poco/TaskManager.h"
 #include "Poco/Logger.h"
 #include "Poco/AutoPtr.h"
@@ -24,7 +25,7 @@ class State;
 class MachineState
 {
 private:
-	State* _currentState;
+	std::unique_ptr<State> _currentState;
 	StateType _nextState;
 	Poco::Logger& _logger;
 	Poco::TaskManager& _taskmanager;

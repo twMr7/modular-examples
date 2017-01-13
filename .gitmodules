@@ -1,0 +1,3 @@
+[submodule "MessageLink/cppzmq"]
+	path = MessageLink/cppzmq
+	url = https://github.com/zeromq/cppzmq.git

@@ -73,19 +73,16 @@ void MachineState::transitState()
 	if (_nextState == StateType::StayAsWere)
 		return;
 
-	// finalize current state
-	delete _currentState;
-
 	// initialze next state
 	switch (_nextState)
 	{
 		case StateType::MotorMoving:
-			_currentState = new MotorMovingState;
+			_currentState = std::unique_ptr<MotorMovingState>(new MotorMovingState);
 			break;
 
 		case StateType::Idle:
 		default:
-			_currentState = new IdleState;
+			_currentState = std::unique_ptr<IdleState>(new IdleState);
 			break;
 	}
 
