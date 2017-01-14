@@ -25,5 +25,6 @@ public:
 	AppWorker() {};
 	bool helpRequested();
 	static void terminate();
+	Poco::NotificationQueue& eventQueue();
 };
 

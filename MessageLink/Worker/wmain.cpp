@@ -1,7 +1,7 @@
 #include <iostream>
 #include "Poco/Logger.h"
 #include "AppWorker.h"
-#include "MessageLink.h"
+#include "SubsysMessageLink.h"
 
 using Poco::Util::Application;
 using Poco::Logger;
@@ -26,7 +26,7 @@ int wmain(int argc, wchar_t** argv)
 
 	try
 	{
-		appMain.addSubsystem(new MessageLink);
+		appMain.addSubsystem(new SubsysMessageLink);
 		// initialize(), main(), and then uninitialize()
 		return appMain.run();
 	}

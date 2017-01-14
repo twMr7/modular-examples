@@ -135,3 +135,8 @@ void AppWorker::terminate()
 {
 	_eventQueue.enqueueUrgentNotification(new Event_TerminateRequest);
 }
+
+Poco::NotificationQueue & AppWorker::eventQueue()
+{
+	return _eventQueue;
+}

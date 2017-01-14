@@ -37,3 +37,12 @@ class Event_TerminateRequest : public Poco::Notification
 public:
 	Event_TerminateRequest() {}
 };
+
+class Event_IncomingMessage : public Poco::Notification
+{
+public:
+	Event_IncomingMessage(std::string& str) : _data(str) {}
+	std::string Data() const { return _data; }
+private:
+	std::string _data;
+};

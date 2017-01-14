@@ -108,6 +108,11 @@ void MachineState::onMotorFeedback(const AutoPtr<Event_MotorFeedback> & pNotify)
 	poco_information(_logger, "Motor feedback position = " + std::to_string(pNotify->Position()));
 }
 
+void MachineState::onIncomingMessage(const AutoPtr<Event_IncomingMessage> & pNotify)
+{
+	poco_information(_logger, "Incoming message: " + pNotify->Data());
+}
+
 /**********************************************************************************
  * State Patterns for MachineState
  **********************************************************************************/

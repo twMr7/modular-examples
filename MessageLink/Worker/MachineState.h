@@ -49,6 +49,7 @@ public:
 	void onSensor1Changed(const Poco::AutoPtr<Event_Sensor1Changed>& pNotify);
 	void onSensor2Changed(const Poco::AutoPtr<Event_Sensor2Changed>& pNotify);
 	void onMotorFeedback(const Poco::AutoPtr<Event_MotorFeedback>& pNotify);
+	void onIncomingMessage(const Poco::AutoPtr<Event_IncomingMessage> & pNotify);
 };
 
 // abstract base class for all the states defined for this machine

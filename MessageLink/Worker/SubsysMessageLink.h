@@ -1,17 +1,17 @@
 #pragma once
 
 #include "Poco/Util/Subsystem.h"
-#include "zmq.hpp"
+#include "Poco/Thread.h"
 
-class MessageLink : public Poco::Util::Subsystem
+class SubsysMessageLink : public Poco::Util::Subsystem
 {
 private:
-	zmq::context_t _mq;
+	Poco::Thread _mqtask;
 public:
-	MessageLink();
+	SubsysMessageLink();
 	const char* name() const;
 protected:
-	~MessageLink();
+	~SubsysMessageLink();
 	void initialize(Poco::Util::Application& app);
 	void uninitialize();
 };

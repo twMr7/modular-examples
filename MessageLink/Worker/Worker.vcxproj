@@ -158,18 +158,16 @@
     <ClCompile Include="AppWorker.cpp" />
     <ClCompile Include="DioPollingTask.cpp" />
     <ClCompile Include="MachineState.cpp" />
-    <ClCompile Include="MessageLink.cpp" />
+    <ClCompile Include="SubsysMessageLink.cpp" />
     <ClCompile Include="ServoMotionTask.cpp" />
     <ClCompile Include="wmain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\cppzmq\zmq.hpp" />
-    <ClInclude Include="..\cppzmq\zmq_addon.hpp" />
     <ClInclude Include="AppWorker.h" />
     <ClInclude Include="DioPollingTask.h" />
     <ClInclude Include="MachineEvents.h" />
     <ClInclude Include="MachineState.h" />
-    <ClInclude Include="MessageLink.h" />
+    <ClInclude Include="SubsysMessageLink.h" />
     <ClInclude Include="ServoMotionTask.h" />
   </ItemGroup>
   <ItemGroup>

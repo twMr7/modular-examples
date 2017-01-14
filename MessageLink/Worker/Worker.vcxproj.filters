@@ -34,7 +34,7 @@
     <ClCompile Include="ServoMotionTask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MessageLink.cpp">
+    <ClCompile Include="SubsysMessageLink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -54,13 +54,7 @@
     <ClInclude Include="ServoMotionTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MessageLink.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\cppzmq\zmq.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\cppzmq\zmq_addon.hpp">
+    <ClInclude Include="SubsysMessageLink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
