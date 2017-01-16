@@ -3,8 +3,10 @@
 
 class ServoMotionTask : public Poco::Task
 {
+private:
+	int32_t _speed;
 public:
-	ServoMotionTask();
+	ServoMotionTask(int32_t speed);
 	void runTask();
 };
 

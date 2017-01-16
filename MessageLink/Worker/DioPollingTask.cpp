@@ -41,7 +41,7 @@ void DioPollingTask::runTask()
 		if (!isCancelled())
 		{
 			// take corresonding actions for the changes
-			if (_stateDin == (uint16_t)Din::Sensor1)
+			/*if (_stateDin == (uint16_t)Din::Sensor1)
 			{
 				poco_trace(_logger, "Sensor1 ON");
 				postNotification(new Event_Sensor1Changed(true));
@@ -51,7 +51,7 @@ void DioPollingTask::runTask()
 				poco_trace(_logger, "Sensor2 ON");
 				postNotification(new Event_Sensor2Changed(true));
 			}
-			else
+			else*/
 			{
 				poco_trace(_logger, "DIO changes " + NumberFormatter::formatHex(_stateDin, true));
 			}

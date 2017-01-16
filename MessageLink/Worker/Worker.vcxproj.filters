@@ -34,7 +34,7 @@
     <ClCompile Include="ServoMotionTask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SubsysMessageLink.cpp">
+    <ClCompile Include="MqTask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -54,7 +54,7 @@
     <ClInclude Include="ServoMotionTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SubsysMessageLink.h">
+    <ClInclude Include="MqTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

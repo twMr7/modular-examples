@@ -1,0 +1,31 @@
+﻿<Window x:Class="Commander.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Commander"
+        mc:Ignorable="d"
+        Title="Commander Window" Height="350" Width="525" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="btnSend" Content="Send to Worker" HorizontalAlignment="Left" Margin="25,258,0,0" VerticalAlignment="Top" Width="111" Grid.Column="1" Height="40" Click="btnSend_Click"/>
+        <TextBox x:Name="txtMessage" Grid.Column="1" HorizontalAlignment="Left" Height="60" Margin="27,179,0,0" TextWrapping="Wrap" Text="Enter messages here ..." VerticalAlignment="Top" Width="318" RenderTransformOrigin="0.5,0.5">
+            <TextBox.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="0.195"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </TextBox.RenderTransform>
+        </TextBox>
+        <Button x:Name="btnStartMotor" Grid.ColumnSpan="2" Content="Start Motor" HorizontalAlignment="Left" Margin="268,21,0,0" VerticalAlignment="Top" Width="100" Height="32" Click="btnStartMotor_Click"/>
+        <Label x:Name="label" Grid.ColumnSpan="2" Content="Speed" HorizontalAlignment="Left" Margin="25,27,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtSpeed" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="73,27,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="123" Height="26" TextAlignment="Center"/>
+        <Button x:Name="btnStopMotor" Grid.ColumnSpan="2" Content="Stop Motor" HorizontalAlignment="Left" Margin="373,21,0,0" VerticalAlignment="Top" Width="100" Height="32" Click="btnStopMotor_Click"/>
+
+    </Grid>
+</Window>

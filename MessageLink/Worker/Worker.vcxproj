@@ -158,7 +158,7 @@
     <ClCompile Include="AppWorker.cpp" />
     <ClCompile Include="DioPollingTask.cpp" />
     <ClCompile Include="MachineState.cpp" />
-    <ClCompile Include="SubsysMessageLink.cpp" />
+    <ClCompile Include="MqTask.cpp" />
     <ClCompile Include="ServoMotionTask.cpp" />
     <ClCompile Include="wmain.cpp" />
   </ItemGroup>
@@ -167,7 +167,7 @@
     <ClInclude Include="DioPollingTask.h" />
     <ClInclude Include="MachineEvents.h" />
     <ClInclude Include="MachineState.h" />
-    <ClInclude Include="SubsysMessageLink.h" />
+    <ClInclude Include="MqTask.h" />
     <ClInclude Include="ServoMotionTask.h" />
   </ItemGroup>
   <ItemGroup>

@@ -2,24 +2,19 @@
 
 #include "Poco/Notification.h"
 
-class Event_Sensor1Changed : public Poco::Notification
+class Event_StartMotor : public Poco::Notification
 {
-public:
-	Event_Sensor1Changed(bool value) : _value(value) {}
-	bool isON() const { return _value; }
-
 private:
-	bool _value;
+	int32_t _speed;
+public:
+	Event_StartMotor(int32_t speed) : _speed(speed) {}
+	int32_t Speed() const { return _speed; }
 };
 
-class Event_Sensor2Changed : public Poco::Notification
+class Event_StopMotor : public Poco::Notification
 {
 public:
-	Event_Sensor2Changed(bool value) : _value(value) {}
-	bool isON() const { return _value; }
-
-private:
-	bool _value;
+	Event_StopMotor() {}
 };
 
 class Event_MotorFeedback : public Poco::Notification
@@ -36,13 +31,4 @@ class Event_TerminateRequest : public Poco::Notification
 {
 public:
 	Event_TerminateRequest() {}
-};
-
-class Event_IncomingMessage : public Poco::Notification
-{
-public:
-	Event_IncomingMessage(std::string& str) : _data(str) {}
-	std::string Data() const { return _data; }
-private:
-	std::string _data;
 };

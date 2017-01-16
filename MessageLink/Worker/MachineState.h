@@ -5,10 +5,11 @@
 #include "Poco/Logger.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/NotificationQueue.h"
+#include "Poco/DynamicAny.h"
 
 #include "MachineEvents.h"
 
-enum class StateType
+enum class StateType : int8_t
 {
 	// concrete machine states
 	Idle,
@@ -19,6 +20,7 @@ enum class StateType
 
 // forward declaration for State class
 class State;
+typedef std::map<std::string, Poco::DynamicAny> StateInfo;
 
 // the machine context of the example
 // MachineState manages all events and states of this machine
@@ -26,7 +28,7 @@ class MachineState
 {
 private:
 	std::unique_ptr<State> _currentState;
-	StateType _nextState;
+	StateInfo _nextStateInfo;
 	Poco::Logger& _logger;
 	Poco::TaskManager& _taskmanager;
 	Poco::NotificationQueue& _queue;
@@ -40,16 +42,13 @@ public:
 	// start looping and wait for events
 	void start();
 	// event handler and state transition
-	void handleEvent(const Poco::AutoPtr<Poco::Notification>& pNotify);
-	void setNext(StateType type);
 	Poco::Logger& logger() const;
 	Poco::TaskManager& taskmanager() const;
 
 	// event observers
-	void onSensor1Changed(const Poco::AutoPtr<Event_Sensor1Changed>& pNotify);
-	void onSensor2Changed(const Poco::AutoPtr<Event_Sensor2Changed>& pNotify);
+	void onStartMotor(const Poco::AutoPtr<Event_StartMotor>& pNotify);
+	void onStopMotor(const Poco::AutoPtr<Event_StopMotor>& pNotify);
 	void onMotorFeedback(const Poco::AutoPtr<Event_MotorFeedback>& pNotify);
-	void onIncomingMessage(const Poco::AutoPtr<Event_IncomingMessage> & pNotify);
 };
 
 // abstract base class for all the states defined for this machine
@@ -62,7 +61,7 @@ public:
 	State(StateType type) : _type(type) {}
 	StateType type() const { return _type; }
 	// return the next state to be transitiioned
-	virtual StateType handleEvent(MachineState& machine, const Poco::AutoPtr<Poco::Notification>& pNotify) = 0;
+	virtual StateInfo handleEvent(MachineState& machine, const Poco::AutoPtr<Poco::Notification>& pNotify) = 0;
 	virtual void enter(MachineState& machine) = 0;
 };
 
@@ -71,14 +70,17 @@ class IdleState : public State
 {
 public:
 	IdleState() : State(StateType::Idle) {}
-	StateType handleEvent(MachineState& machine, const Poco::AutoPtr<Poco::Notification>& pNotify);
+	StateInfo handleEvent(MachineState& machine, const Poco::AutoPtr<Poco::Notification>& pNotify);
 	void enter(MachineState& machine);
 };
 
 class MotorMovingState : public State
 {
+private:
+	int32_t _speed;
 public:
-	MotorMovingState() : State(StateType::MotorMoving) {}
-	StateType handleEvent(MachineState& machine, const Poco::AutoPtr<Poco::Notification>& pNotify);
+	MotorMovingState(int32_t speed) : State(StateType::MotorMoving), _speed(speed) {}
+	StateInfo handleEvent(MachineState& machine, const Poco::AutoPtr<Poco::Notification>& pNotify);
 	void enter(MachineState& machine);
 };
+
