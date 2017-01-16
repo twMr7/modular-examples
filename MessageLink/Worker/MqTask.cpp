@@ -37,6 +37,12 @@ void MqTask::runTask()
 			std::string address = messageIncoming.popstr();
 			assert(address == "To Worker");
 
+			if (messageIncoming.empty())
+			{
+				poco_debug(_logger, "Invalid message: empty payload");
+				continue;
+			}
+
 			CommandType cmdtype = (CommandType)messageIncoming.poptyp<uint8_t>();
 			switch (cmdtype)
 			{
