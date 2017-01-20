@@ -27,6 +27,9 @@
     <ClInclude Include="..\include\AbstractPlugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\AbstractOtherPlugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="AppLoadPlugin.ini">

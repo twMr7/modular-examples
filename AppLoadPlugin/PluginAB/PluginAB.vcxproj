@@ -161,6 +161,7 @@
     <ClCompile Include="PluginAB.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\AbstractOtherPlugin.h" />
     <ClInclude Include="..\include\AbstractPlugin.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

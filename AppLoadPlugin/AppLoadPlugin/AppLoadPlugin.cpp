@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "AbstractPlugin.h"
+#include "AbstractOtherPlugin.h"
 
 using Poco::Util::Application;
 using Poco::Util::Option;
@@ -33,7 +34,9 @@ class AppLoadPlugin : public Application
 private:
 	bool _helpRequested;
 	Poco::ClassLoader<AbstractPlugin> _pluginLoader;
+	Poco::ClassLoader<AbstractOtherPlugin> _pluginBLoader;
 	AbstractPlugin* _pPluginInstance{ nullptr };
+	AbstractOtherPlugin* _pPluginBInstance{ nullptr };
 
 public:
 	AppLoadPlugin() : _helpRequested(false)
@@ -167,8 +170,8 @@ protected:
 			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentConfig)));
 
 		options.addOption(
-			Option("plugin", "p", "load different plugin class, available plugins: { 'PluginA', 'PluginB', 'PluginC' }")
-			.required(true)
+			Option("plugin", "p", "load different plugin class, available plugins: { 'PluginA', 'PluginC' }")
+			.required(false)
 			.repeatable(false)
 			.argument("class")
 			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentPluginClass)));
@@ -200,7 +203,7 @@ protected:
 	{
 		poco_debug(logger(), "handleArgumentPluginClass: " + value);
 		// validate the argument for the availability of plugin classes
-		if (value == "PluginA" || value == "PluginB" || value == "PluginC")
+		if (value == "PluginA" || value == "PluginC")
 			config().setString("plugin.class", value);
 	}
 
@@ -232,33 +235,55 @@ protected:
 		if (_pPluginInstance != nullptr)
 			return;
 
-		// default to load PluginC class from PluginC.dll
-		std::string pluginFile{ "PluginC.dll" };
-		std::string pluginClass = config().getString("plugin.class", "PluginC");
-		if (pluginClass == "PluginA" || pluginClass == "PluginB")
-			pluginFile = "PluginAB.dll";
-
-		// check the existence of the .dll file before loading it
-		if (Poco::File(pluginFile).exists())
+		try
 		{
-			_pluginLoader.loadLibrary(pluginFile);
-
-			// display the information about plugin class if needed
-			Poco::ClassLoader<AbstractPlugin>::Iterator it(_pluginLoader.begin());
-			Poco::ClassLoader<AbstractPlugin>::Iterator end(_pluginLoader.end());
-			poco_trace(logger(), "Plugin loader info: " + it->first);
-			for (; it != end; ++it)
+			std::string pluginClass = config().getString("plugin.class", "PluginC");
+			std::string pluginFile;
+			if (pluginClass == "PluginA")
 			{
-				poco_trace(logger(), "\tplugin path: " + it->first);
-				Poco::Manifest<AbstractPlugin>::Iterator itMan(it->second->begin());
-				Poco::Manifest<AbstractPlugin>::Iterator endMan(it->second->end());
-				for (; itMan != endMan; ++itMan)
-					poco_trace(logger(), "found class in plugin lib: " + std::string(itMan->name()));
+				pluginFile = "PluginAB.dll";
+				if (Poco::File(pluginFile).exists())
+				{
+					// load additional class B
+					_pluginBLoader.loadLibrary(pluginFile, "B");
+					// display the information about plugin class if needed
+					for (auto it = _pluginBLoader.begin(), end = _pluginBLoader.end(); it != end; ++it)
+					{
+						poco_trace(logger(), "plugin path: " + it->first);
+						for (auto itMan = it->second->begin(), endMan = it->second->end(); itMan != endMan; ++itMan)
+							poco_trace(logger(), "found class in plugin lib: " + std::string(itMan->name()));
+					}
+					// load the class B
+					_pPluginBInstance = _pluginBLoader.create("PluginB");
+					_pluginBLoader.classFor("PluginB").autoDelete(_pPluginBInstance);
+				}
+			}
+			else
+			{
+				pluginFile = "PluginC.dll";
 			}
 
-			// load the class
-			_pPluginInstance = _pluginLoader.create(pluginClass);
-			_pluginLoader.classFor(pluginClass).autoDelete(_pPluginInstance);
+			// check the existence of the .dll file before loading it
+			if (Poco::File(pluginFile).exists())
+			{
+				_pluginLoader.loadLibrary(pluginFile);
+
+				// display the information about plugin class if needed
+				for (auto it = _pluginLoader.begin(), end = _pluginLoader.end(); it != end; ++it)
+				{
+					poco_trace(logger(), "plugin path: " + it->first);
+					for (auto itMan = it->second->begin(), endMan = it->second->end(); itMan != endMan; ++itMan)
+						poco_trace(logger(), "found class in plugin lib: " + std::string(itMan->name()));
+				}
+
+				// load the class
+				_pPluginInstance = _pluginLoader.create(pluginClass);
+				_pluginLoader.classFor(pluginClass).autoDelete(_pPluginInstance);
+			}
+		}
+		catch (Poco::Exception exp)
+		{
+			logger().log(exp);
 		}
 	}
 
@@ -268,12 +293,17 @@ protected:
 			return;
 
 		// default to unload PluginC.dll
-		std::string pluginFile{ "PluginC.dll" };
 		std::string pluginClass = config().getString("plugin.class", "PluginC");
-		if (pluginClass == "PluginA" || pluginClass == "PluginB")
-			pluginFile = "PluginAB.dll";
 
-		_pluginLoader.unloadLibrary(pluginFile);
+		if (pluginClass == "PluginC")
+		{
+			_pluginLoader.unloadLibrary("PluginC.dll");
+		}
+		else
+		{
+			_pluginLoader.unloadLibrary("PluginAB.dll");
+			_pluginBLoader.unloadLibrary("PluginAB.dll");
+		}
 	}
 
 	int main(const ArgVec& args)
@@ -305,7 +335,13 @@ protected:
 		}
 
 		// show loaded plugin
-		std::cout << "\nwhich plugin: " << _pPluginInstance->name() << " is loaded this time." << std::endl;
+		std::cout << "\nplugin: " << _pPluginInstance->name() << " is loaded as you wish." << std::endl;
+		if (_pPluginBInstance != nullptr)
+		{
+			std::cout << "you may want to know that additional class '"
+				<< _pPluginBInstance->name() << "' is also loaded at "
+				<< _pPluginBInstance->time() << std::endl;
+		}
 
 		// wait for any key then exit
 		std::system("pause");

@@ -161,6 +161,7 @@
     <ClCompile Include="AppLoadPlugin.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\AbstractOtherPlugin.h" />
     <ClInclude Include="..\include\AbstractPlugin.h" />
   </ItemGroup>
   <ItemGroup>
