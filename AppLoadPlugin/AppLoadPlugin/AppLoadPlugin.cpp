@@ -19,6 +19,7 @@
 #include "AbstractPlugin.h"
 #include "AbstractOtherPlugin.h"
 
+using std::string;
 using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
@@ -37,6 +38,7 @@ private:
 	Poco::ClassLoader<AbstractOtherPlugin> _pluginBLoader;
 	AbstractPlugin* _pPluginInstance{ nullptr };
 	AbstractOtherPlugin* _pPluginBInstance{ nullptr };
+	string _checkKey;
 
 public:
 	AppLoadPlugin() : _helpRequested(false)
@@ -175,6 +177,13 @@ protected:
 			.repeatable(false)
 			.argument("class")
 			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentPluginClass)));
+
+		options.addOption(
+			Option("key", "k", "check configuration key")
+			.required(false)
+			.repeatable(false)
+			.argument("key2check")
+			.callback(OptionCallback<AppLoadPlugin>(this, &AppLoadPlugin::handleArgumentCheckKey)));
 	}
 
 	void handleArgumentHelp(const std::string& name, const std::string& value)
@@ -205,6 +214,12 @@ protected:
 		// validate the argument for the availability of plugin classes
 		if (value == "PluginA" || value == "PluginC")
 			config().setString("plugin.class", value);
+	}
+
+	void handleArgumentCheckKey(const std::string& name, const std::string& value)
+	{
+		poco_debug(logger(), "handleArgumentCheckKey: " + value);
+		_checkKey = value;
 	}
 
 	void displayHelp()
@@ -343,6 +358,24 @@ protected:
 				<< _pPluginBInstance->time() << std::endl;
 		}
 
+		if (!_checkKey.empty())
+		{
+			std::cout << "check out key: " << _checkKey << std::endl;
+			AbstractConfiguration::Keys keys;
+			config().keys(_checkKey, keys);
+			if (!keys.empty())
+			{
+				std::cout << "has sub-key: ";
+				for (auto value : keys)
+					std::cout << value << " ";
+				std::cout << std::endl;
+			}
+			else if (config().hasProperty(_checkKey))
+				std::cout << _checkKey << " is full key." << std::endl;
+			else
+				std::cout << "no such configuration" << std::endl;
+
+		}
 		// wait for any key then exit
 		std::system("pause");
 
