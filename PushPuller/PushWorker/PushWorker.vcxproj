@@ -156,8 +156,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="PushWorker.ini" />
+    <ConfigurationFile Include="$(TargetName).ini" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <Target Name="AfterBuild">
+    <Message Text="Copy configuration files to output folder" />
+    <Copy SourceFiles="@(ConfigurationFile)" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Target Name="AfterClean">
+    <Message Text="Delete configuration files from output folder" />
+    <Delete Files="$(OutDir)$(TargetName).ini" />
+  </Target>
 </Project>
