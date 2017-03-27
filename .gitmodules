@@ -4,3 +4,6 @@
 [submodule "PushPuller/cppzmq"]
 	path = PushPuller/cppzmq
 	url = https://github.com/zeromq/cppzmq.git
+[submodule "FixedIdentityRoute/cppzmq"]
+	path = FixedIdentityRoute/cppzmq
+	url = https://github.com/zeromq/cppzmq.git
