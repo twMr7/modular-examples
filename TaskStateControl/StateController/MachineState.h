@@ -1,12 +1,9 @@
 #pragma once
-
 #include <memory>
-#include "Poco/TaskManager.h"
-#include "Poco/Logger.h"
-#include "Poco/AutoPtr.h"
-#include "Poco/NotificationQueue.h"
-
-#include "MachineEvents.h"
+#include <Poco/TaskManager.h>
+#include <Poco/Logger.h>
+#include <Poco/AutoPtr.h>
+#include <Poco/NotificationQueue.h>
 
 enum class StateType
 {
@@ -15,6 +12,42 @@ enum class StateType
 	MotorMoving,
 	// special type of states, no class is defined for these
 	StayAsWere
+};
+
+class Event_Sensor1Changed : public Poco::Notification
+{
+public:
+	Event_Sensor1Changed(bool value) : _value(value) {}
+	bool isON() const { return _value; }
+
+private:
+	bool _value;
+};
+
+class Event_Sensor2Changed : public Poco::Notification
+{
+public:
+	Event_Sensor2Changed(bool value) : _value(value) {}
+	bool isON() const { return _value; }
+
+private:
+	bool _value;
+};
+
+class Event_MotorFeedback : public Poco::Notification
+{
+public:
+	Event_MotorFeedback(int32_t pos) : _position(pos) {}
+	int32_t Position() const { return _position; }
+
+private:
+	int32_t _position;
+};
+
+class Event_TerminateRequest : public Poco::Notification
+{
+public:
+	Event_TerminateRequest() {}
 };
 
 // forward declaration for State class
@@ -28,22 +61,23 @@ private:
 	std::unique_ptr<State> _currentState;
 	StateType _nextState;
 	Poco::Logger& _logger;
-	Poco::TaskManager& _taskmanager;
+	Poco::TaskManager _taskmanager;
 	Poco::NotificationQueue& _queue;
 
 protected:
+	// state transition
 	void transitState();
 
 public:
-	MachineState(Poco::TaskManager& taskmgr, Poco::NotificationQueue& queue);
+	MachineState(Poco::NotificationQueue& queue);
+	~MachineState();
+	Poco::Logger& logger() const;
+	Poco::TaskManager& taskmanager();
 
 	// start looping and wait for events
 	void start();
-	// event handler and state transition
-	void handleEvent(const Poco::AutoPtr<Poco::Notification>& pNotify);
-	void setNext(StateType type);
-	Poco::Logger& logger() const;
-	Poco::TaskManager& taskmanager() const;
+	void startServoMotion();
+	void stopServoMotion();
 
 	// event observers
 	void onSensor1Changed(const Poco::AutoPtr<Event_Sensor1Changed>& pNotify);

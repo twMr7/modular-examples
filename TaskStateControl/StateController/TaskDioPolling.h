@@ -1,9 +1,8 @@
 #pragma once
+#include <Poco/Task.h>
+#include <Poco/Logger.h>
 
-#include "Poco/Task.h"
-#include "Poco/Logger.h"
-
-class DioPollingTask : public Poco::Task
+class TaskDioPolling : public Poco::Task
 {
 private:
 	uint16_t _stateDin;
@@ -11,7 +10,7 @@ private:
 	Poco::Logger& _logger;
 
 public:
-	DioPollingTask();
+	TaskDioPolling();
 	void runTask();
 };
 

@@ -1,23 +1,26 @@
-#include "Poco/Util/Application.h"
-#include "Poco/NumberFormatter.h"
+#include <Poco/Util/Application.h>
+#include <Poco/NumberFormatter.h>
+#include <Poco/Format.h>
+#include <Poco/Thread.h>
+#include "TaskDioPolling.h"
+#include "MachineState.h"
 
-#include "DioPollingTask.h"
-#include "MachineEvents.h"
-
+using Poco::Thread;
 using Poco::Task;
 using Poco::Logger;
 using Poco::NumberFormatter;
 
-DioPollingTask::DioPollingTask()
-	: Task("DioPollingTask")
+TaskDioPolling::TaskDioPolling()
+	: Task("TaskDioPolling")
 	, _stateDin(0)
 	, _stateDout(0)
-	, _logger(Logger::get("Dio"))
+	, _logger(Logger::get("TaskDioPolling"))
 {
 }
 
-void DioPollingTask::runTask()
+void TaskDioPolling::runTask()
 {
+	poco_information(_logger, Poco::format("task started Tid=%lu", Thread::currentTid()));
 	// (1). real DIO should perform a initial reading here
 
 	// Task.sleep() will return true immediately if the task is cancelled while sleeping.

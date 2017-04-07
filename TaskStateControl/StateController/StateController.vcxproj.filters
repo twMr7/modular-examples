@@ -19,36 +19,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="StateController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="wmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DioPollingTask.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ServoMotionTask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MachineState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TaskDioPolling.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskServoMotion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AppMainController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="StateController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DioPollingTask.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ServoMotionTask.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MachineState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MachineEvents.h">
+    <ClInclude Include="TaskDioPolling.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskServoMotion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppMainController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

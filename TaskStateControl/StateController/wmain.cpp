@@ -1,21 +1,21 @@
 #include <iostream>
-#include "Poco/Logger.h"
-#include "StateController.h"
+#include <Poco/Logger.h>
+#include "AppMainController.h"
 
 using Poco::Util::Application;
 using Poco::Logger;
 
 int wmain(int argc, wchar_t** argv)
 {
-	StateController appMain;
+	AppMainController appMain;
 	try
 	{
 		// init() process command line and set properties
 		appMain.init(argc, argv);
 	}
-	catch (Poco::Exception& exp)
+	catch (Poco::Exception& e)
 	{
-		appMain.logger().log(exp);
+		appMain.logger().log(e);
 		return Application::EXIT_CONFIG;
 	}
 
@@ -28,10 +28,10 @@ int wmain(int argc, wchar_t** argv)
 		// initialize(), main(), and then uninitialize()
 		return appMain.run();
 	}
-	catch (Poco::Exception& exp)
+	catch (Poco::Exception& e)
 	{
 		std::cerr << "Application.run() failed." << std::endl;
-		appMain.logger().log(exp);
+		appMain.logger().log(e);
 		return Application::EXIT_SOFTWARE;
 	}
 }
