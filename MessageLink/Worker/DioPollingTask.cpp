@@ -1,6 +1,5 @@
-#include "Poco/Util/Application.h"
-#include "Poco/NumberFormatter.h"
-
+#include <Poco/Util/Application.h>
+#include <Poco/NumberFormatter.h>
 #include "DioPollingTask.h"
 #include "MachineEvents.h"
 

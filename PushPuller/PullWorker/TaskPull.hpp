@@ -23,12 +23,12 @@ using std::ostringstream;
 
 #define PUSHER_ADDRESS "tcp://127.0.0.1:6866"
 
-typedef struct
+struct Point3d
 {
 	double x;
 	double y;
 	double z;
-} Point3d;
+};
 
 class TaskPull : public Poco::Task
 {

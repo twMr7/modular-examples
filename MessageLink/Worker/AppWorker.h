@@ -1,9 +1,8 @@
 #pragma once
-
-#include "Poco/Util/Application.h"
-#include "Poco/Util/OptionSet.h"
-#include "Poco/Event.h"
-#include "Poco/NotificationQueue.h"
+#include <Poco/Util/Application.h>
+#include <Poco/Util/OptionSet.h>
+#include <Poco/Event.h>
+#include <Poco/NotificationQueue.h>
 
 class AppWorker : public Poco::Util::Application
 {

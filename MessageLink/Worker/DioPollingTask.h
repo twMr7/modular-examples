@@ -1,7 +1,6 @@
 #pragma once
-
-#include "Poco/Task.h"
-#include "Poco/Logger.h"
+#include <Poco/Task.h>
+#include <Poco/Logger.h>
 
 class DioPollingTask : public Poco::Task
 {

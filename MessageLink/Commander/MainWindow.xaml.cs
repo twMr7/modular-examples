@@ -44,11 +44,12 @@ namespace Commander
 
         private void btnSend_Click(object sender, RoutedEventArgs e)
         {
-            byte[] byteMsg = Encoding.ASCII.GetBytes("To Worker");
-            txtMessage.Text = "Message = " + Encoding.ASCII.GetString(byteMsg) + ", Length = " + byteMsg.Length.ToString();
-            using (ZFrame msgFrame = new ZFrame(byteMsg))
+            string address = "To Worker";
+            using (var cmdOutgoing = new ZMessage())
             {
-                publisher.Send(msgFrame);
+                cmdOutgoing.Add(new ZFrame(address));
+                cmdOutgoing.Add(new ZFrame(txtMessage.Text));
+                publisher.SendMessage(cmdOutgoing);
             }
         }
 

@@ -83,7 +83,7 @@ void AppPushWorker::handleHelp(const string & name, const string & value)
 
 void AppPushWorker::initialize(Application & self)
 {
-	poco_information(logger(), config().getString("application.basename", name()) + " initialize");
+	poco_information(logger(), config().getString("application.baseName", name()) + " initialize");
 	// load default configuration file
 	loadConfiguration();
 	// all registered subsystems are initialized in ancestor's initialize procedure
@@ -94,15 +94,7 @@ void AppPushWorker::initialize(Application & self)
 
 void AppPushWorker::uninitialize()
 {
-	poco_information(logger(), config().getString("application.basename", name()) + " uninitialize");
-	// to avoid unpredictable result cause by AsyncChannel, change the channel to ConsoleChannel explicitly
-	// NOTE: if this cause the undesired console to pop out, modify the ConsoleChannel to NullChannel instead.
-	if (dynamic_cast<Poco::AsyncChannel*>(logger().getChannel()))
-	{
-		Poco::AutoPtr<Poco::ConsoleChannel> pCC = new Poco::ConsoleChannel;
-		logger().setChannel("", pCC);
-	}
-
+	poco_information(logger(), config().getString("application.baseName", name()) + " uninitialize");
 	// ancestor uninitialization
 	Application::uninitialize();
 }
@@ -118,33 +110,6 @@ void AppPushWorker::defineOptions(Poco::Util::OptionSet & options)
 		.callback(OptionCallback<AppPushWorker>(this, &AppPushWorker::handleHelp)));
 }
 
-void AppPushWorker::printProperties(const std::string & base)
-{
-	AbstractConfiguration::Keys keys;
-	config().keys(base, keys);
-	if (keys.empty())
-	{
-		if (config().hasProperty(base))
-		{
-			std::string msg;
-			msg.append(base);
-			msg.append(" = ");
-			msg.append(config().getString(base));
-			logger().information(msg);
-		}
-	}
-	else
-	{
-		for (AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it)
-		{
-			std::string fullKey = base;
-			if (!fullKey.empty()) fullKey += '.';
-			fullKey.append(*it);
-			printProperties(fullKey);
-		}
-	}
-}
-
 int AppPushWorker::main(const ArgVec & args)
 {
 	if (!_helpRequested)
@@ -153,8 +118,6 @@ int AppPushWorker::main(const ArgVec & args)
 		// install the unhandled error catcher for threads
 		TaskErrorHandler newEH;
 		Poco::ErrorHandler* pOldEH = Poco::ErrorHandler::set(&newEH);
-
-		printProperties("");
 
 		TaskManager taskmanager;
 		taskmanager.start(new TaskPush);
@@ -176,6 +139,20 @@ int AppPushWorker::main(const ArgVec & args)
 		}
 
 		_eventTerminated.set();
+
+		taskmanager.cancelAll();
+
+		// Note: Close the AsyncChannel before taskManager joinAll() get called.
+		//       otherwise, default thread pool can be spin-locked on waiting to join. 
+		Poco::AsyncChannel* pAsyncChannel = dynamic_cast<Poco::AsyncChannel*>(logger().getChannel());
+		if (pAsyncChannel)
+		{
+			pAsyncChannel->close();
+			Poco::AutoPtr<Poco::ConsoleChannel> pCC = new Poco::ConsoleChannel;
+			logger().setChannel("", pCC);
+		}
+
+		taskmanager.joinAll();
 
 		// put back the original error handler
 		Poco::ErrorHandler::set(pOldEH);

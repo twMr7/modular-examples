@@ -1,12 +1,10 @@
 #pragma once
-
 #include <memory>
-#include "Poco/TaskManager.h"
-#include "Poco/Logger.h"
-#include "Poco/AutoPtr.h"
-#include "Poco/NotificationQueue.h"
-#include "Poco/DynamicAny.h"
-
+#include <Poco/TaskManager.h>
+#include <Poco/Logger.h>
+#include <Poco/AutoPtr.h>
+#include <Poco/NotificationQueue.h>
+#include <Poco/DynamicAny.h>
 #include "MachineEvents.h"
 
 enum class StateType : int8_t

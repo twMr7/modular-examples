@@ -4,6 +4,8 @@
 #include "MachineEvents.h"
 
 using Poco::Logger;
+using zmq::message_t;
+using zmq::multipart_t;
 
 enum class CommandType : uint8_t
 {
@@ -31,7 +33,7 @@ void MqTask::runTask()
 
 	while (!sleep(10))
 	{
-		zmq::multipart_t messageIncoming;
+		multipart_t messageIncoming;
 		if (messageIncoming.recv(commandSubscriber, ZMQ_DONTWAIT))
 		{
 			std::string address = messageIncoming.popstr();
@@ -43,26 +45,33 @@ void MqTask::runTask()
 				continue;
 			}
 
-			CommandType cmdtype = (CommandType)messageIncoming.poptyp<uint8_t>();
-			switch (cmdtype)
+			if (messageIncoming.at(0).size() == 1)
 			{
-			case CommandType::StartMotor:
-				poco_trace(_logger, "command StartMotor");
-				postNotification(new Event_StartMotor(messageIncoming.poptyp<int32_t>()));
-				break;
+				CommandType cmdtype = (CommandType)messageIncoming.poptyp<uint8_t>();
+				switch (cmdtype)
+				{
+				case CommandType::StartMotor:
+					poco_trace(_logger, "command StartMotor");
+					postNotification(new Event_StartMotor(messageIncoming.poptyp<int32_t>()));
+					break;
 
-			case CommandType::StopMotor:
-				poco_trace(_logger, "command StopMotor");
-				postNotification(new Event_StopMotor);
-				break;
+				case CommandType::StopMotor:
+					poco_trace(_logger, "command StopMotor");
+					postNotification(new Event_StopMotor);
+					break;
 
-			case CommandType::KeepAlive:
-				poco_trace(_logger, "command KeepAlive");
-				break;
+				case CommandType::KeepAlive:
+					poco_trace(_logger, "command KeepAlive");
+					break;
 
-			default:
-				poco_debug(_logger, "Unknow command type: " + std::to_string((uint8_t)cmdtype));
-				break;
+				default:
+					poco_debug(_logger, "Unknow command type: " + std::to_string((uint8_t)cmdtype));
+					break;
+				}
+			}
+			else
+			{
+				poco_notice(_logger, "Unknown message: " + messageIncoming.str());
 			}
 		}
 	}

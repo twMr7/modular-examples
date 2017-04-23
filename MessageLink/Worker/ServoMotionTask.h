@@ -1,5 +1,5 @@
 #pragma once
-#include "Poco/Task.h"
+#include <Poco/Task.h>
 
 class ServoMotionTask : public Poco::Task
 {

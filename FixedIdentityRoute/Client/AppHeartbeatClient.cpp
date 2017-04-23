@@ -71,7 +71,7 @@ BOOL AppHeartbeatClient::ConsoleCtrlHandler(DWORD ctrlType)
 
 void AppHeartbeatClient::initialize(Application & self)
 {
-	poco_information(logger(), config().getString("application.name", name()) + " initialize");
+	poco_information(logger(), config().getString("application.baseName", name()) + " initialize");
 	// load default configuration file
 	loadConfiguration();
 	// all registered subsystems are initialized in ancestor's initialize procedure
@@ -82,14 +82,7 @@ void AppHeartbeatClient::initialize(Application & self)
 
 void AppHeartbeatClient::uninitialize()
 {
-	poco_information(logger(), config().getString("application.name", name()) + " uninitialize");
-	// to avoid unpredictable result cause by AsyncChannel, change the channel to ConsoleChannel explicitly
-	if (dynamic_cast<Poco::AsyncChannel*>(logger().getChannel()))
-	{
-		Poco::AutoPtr<Poco::ConsoleChannel> pCC = new Poco::ConsoleChannel;
-		logger().setChannel("", pCC);
-	}
-
+	poco_information(logger(), config().getString("application.baseName", name()) + " uninitialize");
 	// ancestor uninitialization
 	Application::uninitialize();
 }
@@ -129,6 +122,17 @@ int AppHeartbeatClient::main(const ArgVec & args)
 		_eventTerminated.set();
 
 		taskManager.cancelAll();
+
+		// Note: Close the AsyncChannel before taskManager joinAll() get called.
+		//       otherwise, default thread pool can be spin-locked on waiting to join. 
+		Poco::AsyncChannel* pAsyncChannel = dynamic_cast<Poco::AsyncChannel*>(logger().getChannel());
+		if (pAsyncChannel)
+		{
+			pAsyncChannel->close();
+			Poco::AutoPtr<Poco::ConsoleChannel> pCC = new Poco::ConsoleChannel;
+			logger().setChannel("", pCC);
+		}
+
 		taskManager.joinAll();
 
 		Poco::ErrorHandler::set(pOldEH);
