@@ -12,7 +12,7 @@ All projects here rely on the integration environment of [*vcpkg*](https://githu
  
 Overview of The Examples
 ------------------------
-- *AppLoadPlugin*: How a feature-rich application framework can provide without writing too many codes.
+- *AppLogAndConfig*: How a feature-rich application framework can provide without writing too many codes.
 - *TaskStateControl*: Tasks and states coordination in a high level way.
 - *MessageLink*: GUI and data logic are separate module. Two modules are communicated via network. 
 - *PushPuller*: jobs send over ZeroMQ in push & pull scenario.
