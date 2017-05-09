@@ -57,24 +57,45 @@ namespace PullWorkerCSharp
                         throw new ZException(error);
                     }
 
-                    // 1st frame
-                    string strdata = msgIncoming.PopString();
-                    Console.WriteLine("### New job:\n{0}", strdata);
+                    //string strdata = msgIncoming.PopString();
+                    Console.WriteLine("### New job:");
 
-                    // 2nd frame is the number of points
+                    // 1st frame is the number of points
                     int numOfPoints = msgIncoming.PopInt32();
 
-                    // 3rd frame is the Point3d structure
+                    // 2nd frame is the Point3d structure array
                     ZFrame p3dFrame = msgIncoming.Pop();
                     Console.WriteLine("Contains {0} points, {1} bytes", numOfPoints, p3dFrame.Length);
                     IntPtr p3dPtr = p3dFrame.DataPtr();
                     Point3d[] p3data = new Point3d[numOfPoints];
-                    Console.WriteLine(">>> p3data dump");
+                    Console.WriteLine(">>> Point3d array dump");
                     for (int i = 0; i < numOfPoints; ++i)
                     {
                         p3data[i] = (Point3d)Marshal.PtrToStructure(p3dPtr + (i * Marshal.SizeOf(typeof(Point3d))), typeof(Point3d));
                         Console.WriteLine("\t{0}, {1}, {2}", p3data[i].x, p3data[i].y, p3data[i].z);
                     }
+
+                    // 3rd frame is the size of double array
+                    uint sizeOfDoubleArray = msgIncoming.PopUInt32();
+
+                    // 4th frame is the double array
+                    ZFrame frameDoubleArray = msgIncoming.Pop();
+                    Console.WriteLine("Contains {0} doubles, {1} bytes", sizeOfDoubleArray, frameDoubleArray.Length);
+                    IntPtr dvecPtr = frameDoubleArray.DataPtr();
+                    double[] dvec = new double[sizeOfDoubleArray];
+                    Console.WriteLine(">>> double array dump");
+                    for (int i = 0; i < sizeOfDoubleArray; ++i)
+                    {
+                        dvec[i] = (Double)Marshal.PtrToStructure(dvecPtr + (i * Marshal.SizeOf(typeof(Double))), typeof(Double));
+                        Console.Write("{0}, ", dvec[i]);
+                    }
+                    Console.WriteLine();
+
+                    // 5th frame is a double scalar
+                    ZFrame frameDoubleScalar = msgIncoming.Pop();
+                    IntPtr dscalarPtr = frameDoubleScalar.DataPtr();
+                    double dscalar = (Double)Marshal.PtrToStructure(dscalarPtr, typeof(Double));
+                    Console.WriteLine("A double scalar: {0}", dscalar);
 
                     Thread.Sleep(3);
                 }
