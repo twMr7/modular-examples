@@ -31,6 +31,8 @@ using Poco::Util::AbstractConfiguration;
 using Poco::TaskManager;
 using Poco::Notification;
 
+#define DEFAULT_PUSHTO_ADDRESS "tcp://127.0.0.1:6866"
+
 class TaskErrorHandler : public Poco::ErrorHandler
 {
 public:
@@ -119,8 +121,9 @@ int AppPushWorker::main(const ArgVec & args)
 		TaskErrorHandler newEH;
 		Poco::ErrorHandler* pOldEH = Poco::ErrorHandler::set(&newEH);
 
+		string pushto = config().getString("application.push.to", DEFAULT_PUSHTO_ADDRESS);
 		TaskManager taskmanager;
-		taskmanager.start(new TaskPush);
+		taskmanager.start(new TaskPush(pushto));
 
 		for (;;)
 		{

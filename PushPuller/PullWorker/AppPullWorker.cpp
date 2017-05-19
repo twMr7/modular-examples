@@ -31,6 +31,8 @@ using Poco::Util::AbstractConfiguration;
 using Poco::TaskManager;
 using Poco::Notification;
 
+#define DEFAULT_PULLFROM_ADDRESS "tcp://127.0.0.1:6866"
+
 class TaskErrorHandler : public Poco::ErrorHandler
 {
 public:
@@ -119,8 +121,9 @@ int AppPullWorker::main(const ArgVec & args)
 		TaskErrorHandler newEH;
 		Poco::ErrorHandler* pOldEH = Poco::ErrorHandler::set(&newEH);
 
+		string pullfrom = config().getString("application.pull.from", DEFAULT_PULLFROM_ADDRESS);
 		TaskManager taskmanager;
-		taskmanager.start(new TaskPull);
+		taskmanager.start(new TaskPull(pullfrom));
 
 		for (;;)
 		{

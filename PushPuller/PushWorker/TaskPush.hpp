@@ -18,10 +18,9 @@
 #include <Poco/NotificationQueue.h>
 #include <zmq_addon.hpp>
 
+using std::string;
 using std::ostringstream;
 using std::vector;
-
-#define PUSHER_ADDRESS "tcp://127.0.0.1:6866"
 
 struct Point3d
 {
@@ -34,12 +33,14 @@ class TaskPush : public Poco::Task
 {
 private:
 	Poco::Logger& _logger;
+	const string _pushto;
 
 public:
 
-	TaskPush()
+	TaskPush(string pushto)
 		: Task("Pusher")
 		, _logger(Poco::Logger::get("Pusher"))
+		, _pushto(pushto)
 	{
 	}
 
@@ -49,11 +50,11 @@ public:
 		zmq::socket_t pusher(context, zmq::socket_type::push);
 		try
 		{
-			pusher.bind(PUSHER_ADDRESS);
+			pusher.bind(_pushto);
 		}
 		catch (std::exception &e)
 		{
-			poco_debug(_logger, "Failed to connect to " + std::string(PUSHER_ADDRESS) + " - " + std::string(e.what()));
+			poco_debug(_logger, "Failed to connect to " + _pushto + ": " + std::string(e.what()));
 			return;
 		}
 
@@ -104,7 +105,7 @@ public:
 			}
 		}
 
-		pusher.disconnect(PUSHER_ADDRESS);
+		pusher.disconnect(_pushto);
 	}
 
 };

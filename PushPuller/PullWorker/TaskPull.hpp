@@ -20,10 +20,9 @@
 #include <zmq_addon.hpp>
 //#include <Eigen/Core>
 
+using std::string;
 using std::ostringstream;
 using std::vector;
-
-#define PUSHER_ADDRESS "tcp://127.0.0.1:6866"
 
 struct Point3d
 {
@@ -36,12 +35,14 @@ class TaskPull : public Poco::Task
 {
 private:
 	Poco::Logger& _logger;
+	const string _pullfrom;
 
 public:
 
-	TaskPull()
+	TaskPull(string pullfrom)
 		: Task("Puller")
 		, _logger(Poco::Logger::get("Puller"))
+		, _pullfrom(pullfrom)
 	{
 	}
 
@@ -51,11 +52,11 @@ public:
 		zmq::socket_t puller(context, zmq::socket_type::pull);
 		try
 		{
-			puller.connect(PUSHER_ADDRESS);
+			puller.connect(_pullfrom);
 		}
 		catch (std::exception &e)
 		{
-			poco_debug(_logger, "Failed to connect to " + std::string(PUSHER_ADDRESS) + " - " + std::string(e.what()));
+			poco_debug(_logger, "Failed to connect to " + _pullfrom + " - " + std::string(e.what()));
 			return;
 		}
 
@@ -122,7 +123,7 @@ public:
 			}
 		}
 
-		puller.disconnect(PUSHER_ADDRESS);
+		puller.disconnect(_pullfrom);
 	}
 
 };
