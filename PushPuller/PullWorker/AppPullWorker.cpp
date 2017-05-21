@@ -1,12 +1,4 @@
-﻿/*
-	File:
-		AppPullWorker.cpp
-	Description:
-		Implementation of the application life cycle and facilities
-	Copyright:
-		Orisol Asia Ltd.
-*/
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <Poco/Util/Option.h>
 #include <Poco/Util/HelpFormatter.h>

@@ -1,12 +1,4 @@
-﻿/*
-	File:
-		AppPushWorker.h
-	Description:
-		Implementation of the application life cycle and facilities
-	Copyright:
-		Orisol Asia Ltd.
-*/
-#pragma once
+﻿#pragma once
 #include <string>
 #include <Poco/Util/Application.h>
 #include <Poco/Util/OptionSet.h>
