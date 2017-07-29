@@ -1,13 +1,3 @@
-/*
-	File:
-		TaskPush.hpp
-	Description:
-		Task to send/receive messages over OMLP (Orisol Module Link Protocol)
-		This is the implementation for worker modules, and the same file can
-		be shared between projects of worker modules.
-	Copyright:
-		Orisol Asia Ltd.
-*/
 #pragma once
 #include <string>
 #include <sstream>
